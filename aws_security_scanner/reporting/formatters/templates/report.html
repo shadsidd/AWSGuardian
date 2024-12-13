@@ -1,0 +1,165 @@
+<!-- aws_security_scanner/reporting/formatters/templates/report.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Security Scanner Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #232f3e;
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .summary-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .finding {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .finding.critical {
+            border-left: 5px solid #dc3545;
+        }
+
+        .finding.high {
+            border-left: 5px solid #fd7e14;
+        }
+
+        .finding.medium {
+            border-left: 5px solid #ffc107;
+        }
+
+        .finding.low {
+            border-left: 5px solid #28a745;
+        }
+
+        .risk-label {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 3px;
+            color: white;
+        }
+
+        .risk-label.critical {
+            background-color: #dc3545;
+        }
+
+        .risk-label.high {
+            background-color: #fd7e14;
+        }
+
+        .risk-label.medium {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .risk-label.low {
+            background-color: #28a745;
+        }
+
+        .services-chart {
+            margin: 20px 0;
+            height: 300px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>AWS Security Scanner Report</h1>
+        <p>Account ID: {{ metadata.account_id }}</p>
+        <p>Scan Date: {{ metadata.scan_date }}</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-box">
+            <h3>Risk Summary</h3>
+            <p>Critical: {{ metadata.risk_summary.critical }}</p>
+            <p>High: {{ metadata.risk_summary.high }}</p>
+            <p>Medium: {{ metadata.risk_summary.medium }}</p>
+            <p>Low: {{ metadata.risk_summary.low }}</p>
+        </div>
+
+        <div class="summary-box">
+            <h3>Compliance Status</h3>
+            <p>Status: {{ metadata.compliance_status.overall_status }}</p>
+            <p>Failing Controls: {{ metadata.compliance_status.failing_controls|length }}</p>
+            <p>Passing Controls: {{ metadata.compliance_status.passing_controls|length }}</p>
+        </div>
+
+        <div class="summary-box">
+            <h3>Services Affected</h3>
+            <canvas id="servicesChart"></canvas>
+        </div>
+    </div>
+
+    <h2>Detailed Findings</h2>
+    {% for finding in findings %}
+        {% set risk_level = calculate_risk_level(finding.risk_factors) %}
+        <div class="finding {{ risk_level|lower }}">
+            <span class="risk-label {{ risk_level|lower }}">{{ risk_level }}</span>
+            <h3>{{ finding.service }}/{{ finding.resource }}</h3>
+            <p><strong>Description:</strong> {{ finding.description }}</p>
+            <p><strong>Recommendation:</strong> {{ finding.recommendation }}</p>
+            <p><strong>Risk Factors:</strong></p>
+            <ul>
+                {% for factor, score in finding.risk_factors.items() %}
+                    <li>{{ factor }}: {{ score }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+
+    <script>
+        const servicesData = {{ metadata.services_affected|tojson }};
+        const ctx = document.getElementById('servicesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(servicesData),
+                datasets: [{
+                    label: 'Findings per Service',
+                    data: Object.values(servicesData),
+                    backgroundColor: '#232f3e'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

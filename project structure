@@ -1,0 +1,34 @@
+# Project Structure
+"""
+aws-security-scanner/
+├── README.md
+├── requirements.txt
+├── setup.py
+├── config/
+│   ├── __init__.py
+│   ├── default_config.yaml
+│   └── schema.py
+├── aws_security_scanner/
+│   ├── __init__.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── base_scanner.py
+│   │   ├── exceptions.py
+│   │   └── utils.py
+│   ├── scanners/
+│   │   ├── __init__.py
+│   │   ├── iam_scanner.py
+│   │   ├── s3_scanner.py
+│   │   └── ... (other scanners)
+│   ├── reporting/
+│   │   ├── __init__.py
+│   │   ├── report_generator.py
+│   │   └── templates/
+│   └── alerts/
+│       ├── __init__.py
+│       └── alert_manager.py
+└── tests/
+    ├── __init__.py
+    ├── test_scanners/
+    └── test_config/
+"""

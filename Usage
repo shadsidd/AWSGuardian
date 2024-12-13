@@ -1,0 +1,278 @@
+# AWS Security Scanner - Example Usage Scenarios
+
+## Table of Contents
+1. [Basic Scanning Scenarios](#basic-scanning-scenarios)
+2. [Compliance Checks](#compliance-checks)
+3. [Custom Rules and Alerting](#custom-rules-and-alerting)
+4. [Continuous Monitoring](#continuous-monitoring)
+5. [Integration Scenarios](#integration-scenarios)
+6. [Report Generation](#report-generation)
+
+## Basic Scanning Scenarios
+
+### Scenario 1: Quick Security Assessment
+**Objective**: Perform a rapid security assessment of critical services.
+
+# Using CLI
+aws-security-scanner scan --priority-services --quick
+
+# Using API
+curl -X POST http://localhost:8080/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scan_type": "quick",
+    "services": ["iam", "s3", "ec2"],
+    "priority_only": true
+  }'
+
+**Configuration**:
+scanners:
+  quick_scan:
+    enabled_services:
+      - iam
+      - s3
+      - ec2
+    timeout: 300
+    parallel_scans: 3
+
+### Scenario 2: Deep Security Audit
+**Objective**: Conduct a thorough security audit across all services.
+
+# Using CLI
+aws-security-scanner scan --full-audit --include-inactive
+
+# Using API
+curl -X POST http://localhost:8080/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scan_type": "full",
+    "include_inactive": true,
+    "detailed_analysis": true
+  }'
+
+## Compliance Checks
+
+### Scenario 3: PCI DSS Compliance Check
+**Objective**: Verify PCI DSS compliance requirements.
+
+# Using CLI
+aws-security-scanner compliance-check --framework pci-dss
+
+# Using API
+curl -X POST http://localhost:8080/api/v1/compliance/check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "framework": "pci-dss",
+    "requirements": ["req-3", "req-4", "req-7"],
+    "generate_report": true
+  }'
+
+**Configuration**:
+compliance:
+  frameworks:
+    pci-dss:
+      enabled: true
+      requirements:
+        - requirement: "req-3"
+          checks:
+            - encryption_at_rest
+            - key_rotation
+        - requirement: "req-4"
+          checks:
+            - in_transit_encryption
+            - tls_version
+
+### Scenario 4: Custom Compliance Framework
+**Objective**: Implement organization-specific compliance checks.
+
+compliance:
+  frameworks:
+    custom:
+      name: "Internal Security Standards"
+      checks:
+        - name: "backup_encryption"
+          rule:
+            service: "rds"
+            condition: "backup.encryption.enabled == true"
+        - name: "vpc_flow_logs"
+          rule:
+            service: "vpc"
+            condition: "flow_logs.enabled == true"
+
+## Custom Rules and Alerting
+
+### Scenario 5: Setting Up Custom Alert Rules
+**Objective**: Create custom alerting based on specific conditions.
+
+alerts:
+  rules:
+    - name: "Public S3 Bucket Alert"
+      condition:
+        service: "s3"
+        check: "bucket.public_access == true"
+      actions:
+        - slack_notification
+        - email_security_team
+        - create_jira_ticket
+
+    - name: "Root Account Usage Alert"
+      condition:
+        service: "iam"
+        check: "root_account.last_used < 24h"
+      severity: "critical"
+      actions:
+        - sms_security_team
+        - slack_notification_urgent
+
+### Scenario 6: Integration with Security Tools
+**Objective**: Forward findings to security tools.
+
+integrations:
+  splunk:
+    enabled: true
+    host: "splunk.company.com"
+    token: "${SPLUNK_TOKEN}"
+    index: "aws_security"
+
+  elastic:
+    enabled: true
+    host: "elasticsearch.company.com"
+    index: "security-findings"
+
+## Continuous Monitoring
+
+### Scenario 7: Setting Up Continuous Monitoring
+**Objective**: Implement ongoing security monitoring.
+
+monitoring:
+  schedule:
+    - name: "Critical Services Check"
+      interval: "15m"
+      services:
+        - iam
+        - s3
+      alert_on: "critical"
+
+    - name: "Full Security Audit"
+      schedule: "0 0 * * *"  # Daily at midnight
+      services: "all"
+      report_format:
+        - pdf
+        - json
+
+### Scenario 8: Real-time Security Events
+**Objective**: Monitor and respond to security events in real-time.
+
+real_time:
+  enabled: true
+  sources:
+    - cloudtrail
+    - guardduty
+    - security_hub
+  actions:
+    - name: "Suspicious API Calls"
+      condition: "event.risk_score > 8"
+      response:
+        - block_ip
+        - revoke_credentials
+        - notify_security
+
+## Integration Scenarios
+
+### Scenario 9: CI/CD Pipeline Integration
+**Objective**: Integrate security scanning into CI/CD pipeline.
+
+# GitLab CI Example
+security_scan:
+  stage: security
+  script:
+    - aws-security-scanner scan --ci-mode --fail-on critical
+    - aws-security-scanner report --format junit > security-report.xml
+  artifacts:
+    reports:
+      junit: security-report.xml
+
+### Scenario 10: Third-party Tool Integration
+**Objective**: Integrate with external security tools.
+
+integrations:
+  jira:
+    enabled: true
+    url: "https://jira.company.com"
+    project: "SEC"
+    issue_type: "Security Finding"
+    transitions:
+      new: "To Do"
+      resolved: "Done"
+
+  servicenow:
+    enabled: true
+    instance: "company.service-now.com"
+    table: "incident"
+    mapping:
+      severity: "impact"
+      finding: "description"
+
+## Report Generation
+
+### Scenario 11: Custom Report Generation
+**Objective**: Generate customized security reports.
+
+# Using CLI
+aws-security-scanner report \
+  --format pdf \
+  --template executive \
+  --period last-7-days \
+  --include-trends \
+  --charts \
+  --output report.pdf
+
+# Using API
+curl -X POST http://localhost:8080/api/v1/reports \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "pdf",
+    "template": "executive",
+    "period": "last-7-days",
+    "options": {
+      "include_trends": true,
+      "include_charts": true,
+      "include_recommendations": true
+    }
+  }'
+
+### Scenario 12: Automated Report Distribution
+**Objective**: Automatically distribute reports to stakeholders.
+
+reporting:
+  schedules:
+    - name: "Daily Security Summary"
+      schedule: "0 9 * * *"  # Daily at 9 AM
+      template: "daily_summary"
+      recipients:
+        - security@company.com
+        - devops@company.com
+
+    - name: "Weekly Executive Report"
+      schedule: "0 7 * * 1"  # Monday at 7 AM
+      template: "executive_summary"
+      format: "pdf"
+      recipients:
+        - cto@company.com
+        - ciso@company.com
+      options:
+        include_trends: true
+        include_metrics: true
+
+Each scenario includes:
+- Clear objective
+- Implementation examples
+- Configuration samples
+- CLI and API usage
+- Integration patterns
+
+Would you like me to:
+1. Add more specific scenarios?
+2. Include more detailed configuration examples?
+3. Add troubleshooting scenarios?
+4. Create environment-specific scenarios (dev,
